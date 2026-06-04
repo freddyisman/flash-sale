@@ -2,6 +2,7 @@ import autocannon from 'autocannon';
 import crypto from 'crypto';
 import { BASE_URL } from './vite.config';
 
+let counter = 0;
 async function executeFlashSaleStressTest() {
   // Create a dummy item first
   const dummyQuantity = 50_000;
@@ -40,6 +41,7 @@ async function executeFlashSaleStressTest() {
           'content-type': 'application/json',
         },
         setupRequest: (req) => {
+          counter++;
           req.body = JSON.stringify({
             email: `dummy_${crypto.randomBytes(16).toString('hex')}@gmail.com`,
             username: `dummy_${crypto.randomBytes(16).toString('hex')}`,
@@ -54,6 +56,7 @@ async function executeFlashSaleStressTest() {
   });
 
   console.log('\n================ STRESS TEST RESULTS ================\n');
+  console.log(`Counter                  : ${counter}`);
   console.log(`Total Available Items    : ${dummyQuantity}`);
   console.log(`Total Requests           : ${result.requests.total}`);
   console.log(`Average Throughput       : ${result.requests.average} req/sec`);
