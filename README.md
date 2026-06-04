@@ -87,7 +87,9 @@ This keeps the frontend lightweight and focused on its job: displaying items and
 ### Prerequisites
 Make sure you have the following installed:
 - **Node.js** v20+ (see `.nvmrc`)
-- **Docker**, **Docker Compose v2**, and **Docker Desktop**
+- **Docker**, **Docker Compose v2**, plus **Docker Desktop** if needed
+
+Note: This project requires Docker to run first. Before starting, please make sure you have Docker installed and the daemon is running.
 
 ### Running the Full Stack (Docker)
 
