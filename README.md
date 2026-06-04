@@ -117,6 +117,11 @@ The application (both frontend and API) is available at: `http://localhost:5000`
 ### Running Tests
 
 Tests use [Vitest](https://vitest.dev/) and **require the full Docker stack to be running first** due to the integration tests making real HTTP requests to the API.
+Install the packages in the root folder first before running the tests:
+
+```sh
+npm install
+```
 
 **Wait for all services to be healthy, then run:**
 
