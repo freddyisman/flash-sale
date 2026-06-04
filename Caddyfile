@@ -1,0 +1,17 @@
+:80 {
+    # Proxy all /api requests to your Fastify backend
+    handle /api/* {
+        reverse_proxy api:5001 {
+            lb_policy round_robin
+            lb_try_duration 5s
+            lb_try_interval 500ms
+        }
+    }
+
+    # For all other requests, serve the frontend static files
+    handle {
+        root * /var/www/html
+        try_files {path} /index.html
+        file_server
+    }
+}

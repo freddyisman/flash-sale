@@ -1,0 +1,150 @@
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "postgres_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=postgres_db
+    volumes:
+      - pg_data:/var/lib/postgresql
+    networks:
+      - backend
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_broker
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - backend
+
+  claim_worker:
+    build:
+      dockerfile: ./src/worker/Dockerfile
+      context: .
+    command: node dist/claim.js
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.local
+    restart: always
+    networks:
+      - backend
+
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    restart: always
+    command: npm run dev
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - 5001
+    env_file:
+      - .env.local
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    networks:
+      - backend
+    deploy:
+      replicas: 3
+
+  payment_worker:
+    build:
+      dockerfile: ./src/worker/Dockerfile
+      context: .
+    command: node dist/payment.js
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.local
+    restart: always
+    networks:
+      - backend
+
+  caddy:
+    image: caddy:alpine
+    ports:
+      - 5000:80
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./src/web/dist:/var/www/html
+    depends_on:
+      - api
+    networks:
+      - backend
+
+  prisma-migrator:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: npx prisma db push
+    env_file:
+      - .env.local
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pg_data:
+    driver: local
+  redis_data:
+    driver: local
