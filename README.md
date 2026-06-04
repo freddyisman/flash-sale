@@ -157,15 +157,16 @@ The stress test (`test/stress-test.ts`) performs the following:
 
 After the test completes, a results summary is printed. Here's an example of one of the stress test run results:
 
-```
+```text
 ================ STRESS TEST RESULTS ================
 
+Counter                  : 29902
 Total Available Items    : 50000
-Total Requests           : 29587
-Average Throughput       : 2958.8 req/sec
-Average Latency          : 252.95 ms
-Max Latency              : 5930 ms
-Total HTTP 2xx Successes : 29587
+Total Requests           : 29102
+Average Throughput       : 2910.7 req/sec
+Average Latency          : 239.42 ms
+Max Latency              : 6772 ms
+Total HTTP 2xx Successes : 29102
 Total Non-2xx Failures   : 0
 Success Rate             : 100%
 Fail Rate                : 0%
@@ -180,6 +181,7 @@ Fail Rate                : 0%
 | **Success Rate: 100%** | All requests received a valid HTTP response (no server errors or crashes).          |
 | **Fail Rate: 0%** | The API handled all concurrent requests without returning 5xx errors.           |
 | **Average Throughput**         | Thousands of purchases per second. The Redis Lua atomic operations keep the hot path fast. |
+| **No Overselling** | A manual `Counter` tracks the actual number of requests processed. You may notice it exceeds Autocannon's `Total Requests` by exactly 800—which matches the number of concurrent connections used in the test. This discrepancy occurs because Autocannon undercounts in-flight requests when the test finishes. It initially looks like the system oversold by 800 items, but the manual counter proves the system correctly processes every request made and no actual overselling occurs. |
 
 
 ## Stop & Cleanup
