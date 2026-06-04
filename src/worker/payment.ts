@@ -66,11 +66,6 @@ async function paymentWorker() {
               'UPDATE "Purchase" SET "status" = $1 WHERE "user_id" = $2 AND "item_id" = $3 AND "status" = $4',
               ['DECLINED', user.rows[0].id, content.itemId, 'PROCESSING'],
             );
-
-            await dbClient.query(
-              'UPDATE "Item" SET "quantity" = "quantity" + $1 WHERE "id" = $2',
-              [content.quantity, content.itemId],
-            );
           } else {
             await dbClient.query(
               'UPDATE "Purchase" SET "status" = $1 WHERE "user_id" = $2 AND "item_id" = $3 AND "status" = $4',
